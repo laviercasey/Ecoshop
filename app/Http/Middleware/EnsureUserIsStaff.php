@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Http\Middleware;
+
 use App\Enums\UserRole;
 use Closure;
 use Illuminate\Http\Request;
@@ -9,16 +11,18 @@ class EnsureUserIsStaff
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->user()) {
+        $user = $request->user();
+        if (! $user) {
             return response()->json(['message' => 'Требуется авторизация'], 401);
         }
-        if (!$request->user()->hasAnyRole([
+        if (! $user->hasAnyRole([
             UserRole::Admin->value,
             UserRole::OrderManager->value,
             UserRole::ContentManager->value,
         ])) {
             return response()->json(['message' => 'Доступ запрещён'], 403);
         }
+
         return $next($request);
     }
 }

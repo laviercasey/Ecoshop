@@ -19,7 +19,7 @@ class SitemapController extends Controller
             ->select('slug', 'updated_at')
             ->get();
 
-        $content = view('sitemap', [
+        $content = view('sitemap', [ // @phpstan-ignore argument.type
             'products' => $products,
             'categories' => $categories,
         ])->render();

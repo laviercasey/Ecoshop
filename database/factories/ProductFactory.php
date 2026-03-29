@@ -16,7 +16,7 @@ class ProductFactory extends Factory
         return [
             'name' => fake()->unique()->words(3, true),
             'slug' => fake()->unique()->slug(3),
-            'sku' => 'ECO-' . strtoupper(fake()->unique()->bothify('???-###')),
+            'sku' => 'ECO-'.strtoupper(fake()->unique()->bothify('???-###')),
             'description' => fake()->paragraph(),
             'price' => $price,
             'compare_price' => null,
@@ -36,7 +36,7 @@ class ProductFactory extends Factory
         return $this->state(['is_published' => false]);
     }
 
-    public function withDiscount(float $comparePrice = null): static
+    public function withDiscount(?float $comparePrice = null): static
     {
         return $this->state(function (array $attributes) use ($comparePrice) {
             return [

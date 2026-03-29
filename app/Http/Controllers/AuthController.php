@@ -80,10 +80,9 @@ class AuthController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        /** @var PersonalAccessToken|null $token */
         $token = $user->currentAccessToken();
-        if ($token instanceof PersonalAccessToken) {
-            $token->delete();
-        }
+        $token?->delete();
 
         return response()->json([
             'message' => 'Выход выполнен',

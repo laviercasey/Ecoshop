@@ -2,10 +2,12 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Banner;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
 
+/** @mixin Banner */
 class BannerResource extends JsonResource
 {
     public function toArray(Request $request): array

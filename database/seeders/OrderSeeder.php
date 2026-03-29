@@ -115,7 +115,7 @@ class OrderSeeder extends Seeder
                 'payment_method' => $paymentMethod,
                 'shipping_method' => $shippingMethod,
                 'tracking_number' => in_array($status, [OrderStatus::Shipped, OrderStatus::Delivered])
-                    ? 'TRK' . fake()->numerify('##########')
+                    ? 'TRK'.fake()->numerify('##########')
                     : null,
                 'customer_name' => $customer->name,
                 'customer_email' => $customer->email,
@@ -168,7 +168,7 @@ class OrderSeeder extends Seeder
             }
         }
 
-        $this->command->info('Orders seeded: ' . Order::count() . ' total');
-        $this->command->info('Order items seeded: ' . OrderItem::count() . ' total');
+        $this->command->info('Orders seeded: '.Order::count().' total');
+        $this->command->info('Order items seeded: '.OrderItem::count().' total');
     }
 }

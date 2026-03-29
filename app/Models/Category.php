@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -53,12 +54,12 @@ class Category extends Model
         return $this->belongsToMany(Product::class);
     }
 
-    public function scopeActive($query)
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }
 
-    public function scopeRoots($query)
+    public function scopeRoots(Builder $query): Builder
     {
         return $query->whereNull('parent_id');
     }

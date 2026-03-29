@@ -4,7 +4,6 @@ import { SlidersHorizontal } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@shared/api';
 import { Breadcrumbs, Drawer, Pagination, Skeleton } from '@shared/ui';
-import { cn } from '@shared/lib';
 import { useSeo } from '@shared/hooks';
 import type { Product } from '@entities/product';
 import { CatalogSidebar } from './CatalogSidebar';

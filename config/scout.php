@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Product;
+
 return [
 
     'driver' => env('SCOUT_DRIVER', 'collection'),
@@ -29,7 +31,7 @@ return [
         'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
         'key' => env('MEILISEARCH_KEY'),
         'index-settings' => [
-            App\Models\Product::class => [
+            Product::class => [
                 'filterableAttributes' => ['is_published', 'price'],
                 'sortableAttributes' => ['price', 'name'],
                 'searchableAttributes' => ['name', 'sku', 'description'],

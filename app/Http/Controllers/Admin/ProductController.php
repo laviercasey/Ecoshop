@@ -8,8 +8,10 @@ use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use App\Models\ProductImage;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
@@ -21,7 +23,8 @@ class ProductController extends Controller
             'categories',
         ]);
 
-        if ($search = $request->query('search')) {
+        $search = $request->query('search');
+        if (is_string($search) && $search !== '') {
             $search = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search);
             $query->where(fn ($q) => $q->where('name', 'like', "%{$search}%")
                 ->orWhere('sku', 'like', "%{$search}%"));
@@ -31,7 +34,7 @@ class ProductController extends Controller
             $query->where('is_published', $request->boolean('is_published'));
         }
 
-        $sort = $request->query('sort', 'latest');
+        $sort = (string) $request->query('sort', 'latest');
         match ($sort) {
             'name' => $query->orderBy('name'),
             'price_asc' => $query->orderBy('price'),
@@ -39,7 +42,7 @@ class ProductController extends Controller
             default => $query->latest(),
         };
 
-        $perPage = min((int) $request->query('per_page', 15), 100);
+        $perPage = min((int) $request->query('per_page', '15'), 100);
         $products = $query->paginate($perPage);
 
         return response()->json([
@@ -53,19 +56,19 @@ class ProductController extends Controller
 
         $product = Product::create(collect($data)->except(['categories', 'images'])->toArray());
 
-        if (!empty($data['categories'])) {
+        if (! empty($data['categories'])) {
             $product->categories()->sync($data['categories']);
         }
 
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $index => $image) {
-                $path = $image->store('products');
-                ProductImage::create([
-                    'product_id' => $product->id,
-                    'path' => $path,
-                    'sort_order' => $index,
-                ]);
-            }
+        /** @var UploadedFile[] $uploadedImages */
+        $uploadedImages = $request->file('images') ?? [];
+        foreach ($uploadedImages as $index => $image) {
+            $path = $image->store('products');
+            ProductImage::create([
+                'product_id' => $product->id,
+                'path' => $path,
+                'sort_order' => $index,
+            ]);
         }
 
         $product->load(['images', 'categories', 'attributes']);
@@ -98,7 +101,9 @@ class ProductController extends Controller
 
         if (array_key_exists('existing_image_ids', $data)) {
             $keepIds = $data['existing_image_ids'] ?? [];
-            $product->images()->whereNotIn('id', $keepIds)->each(function (ProductImage $image) {
+            /** @var Collection<int, ProductImage> $imagesToDelete */
+            $imagesToDelete = $product->images()->whereNotIn('id', $keepIds)->get();
+            $imagesToDelete->each(function (ProductImage $image) {
                 if ($image->path && preg_match('#^products/[^/]+$#', $image->path)) {
                     Storage::delete($image->path);
                 }
@@ -106,14 +111,16 @@ class ProductController extends Controller
             });
         }
 
-        if ($request->hasFile('images')) {
+        /** @var UploadedFile[] $newImages */
+        $newImages = $request->file('images') ?? [];
+        if (! empty($newImages)) {
             $keepCount = count($data['existing_image_ids'] ?? []);
-            $newCount = count($request->file('images'));
+            $newCount = count($newImages);
             if ($keepCount + $newCount > 10) {
                 return response()->json(['message' => 'Нельзя хранить более 10 изображений для одного товара.'], 422);
             }
             $maxSort = $product->images()->max('sort_order') ?? -1;
-            foreach ($request->file('images') as $index => $image) {
+            foreach ($newImages as $index => $image) {
                 $path = $image->store('products');
                 ProductImage::create([
                     'product_id' => $product->id,

@@ -39,6 +39,6 @@ class BannerSeeder extends Seeder
             Banner::create($bannerData);
         }
 
-        $this->command->info('Banners seeded: ' . Banner::count() . ' total');
+        $this->command->info('Banners seeded: '.Banner::count().' total');
     }
 }

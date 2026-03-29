@@ -35,6 +35,6 @@ class CategorySeeder extends Seeder
             ]);
         }
 
-        $this->command->info('Categories seeded: ' . Category::count() . ' total');
+        $this->command->info('Categories seeded: '.Category::count().' total');
     }
 }

@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\ShippingMethod;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +15,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+/**
+ * @property OrderStatus $status
+ * @property PaymentMethod $payment_method
+ * @property ShippingMethod $shipping_method
+ * @property Collection<int, OrderItem> $items
+ * @property Collection<int, OrderStatusHistory> $statusHistory
+ */
 class Order extends Model
 {
     use HasFactory, LogsActivity, SoftDeletes;
@@ -69,7 +78,7 @@ class Order extends Model
         return $this->hasMany(OrderStatusHistory::class)->orderByDesc('created_at');
     }
 
-    public function scopeByStatus($query, OrderStatus $status)
+    public function scopeByStatus(Builder $query, OrderStatus $status): Builder
     {
         return $query->where('status', $status);
     }

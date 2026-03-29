@@ -18,6 +18,7 @@ interface OrderItem {
 }
 
 interface StatusHistoryEntry {
+  id: number;
   old_status: string | null;
   old_status_label: string | null;
   new_status: string;

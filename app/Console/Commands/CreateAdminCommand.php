@@ -19,7 +19,7 @@ class CreateAdminCommand extends Command
             Role::firstOrCreate(['name' => $role->value]);
         }
 
-        $password = env('ADMIN_PASSWORD');
+        $password = config('app.admin_password');
 
         if (! $password) {
             $this->warn('ADMIN_PASSWORD is not set in .env — skipping admin creation.');

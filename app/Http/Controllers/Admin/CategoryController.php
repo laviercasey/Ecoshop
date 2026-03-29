@@ -60,7 +60,7 @@ class CategoryController extends Controller
         $category = DB::transaction(function () use ($data, $id) {
             $category = Category::lockForUpdate()->findOrFail($id);
 
-            if (isset($data['parent_id']) && $data['parent_id'] !== null) {
+            if (isset($data['parent_id'])) {
                 $this->validateNoCyclicNesting($id, $data['parent_id']);
             }
 

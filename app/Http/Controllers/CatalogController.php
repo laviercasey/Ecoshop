@@ -15,10 +15,10 @@ class CatalogController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $categorySlug = $request->query('category');
-        $search       = $request->query('search');
-        $sort         = $request->query('sort', 'popular');
-        $page         = (int) $request->query('page', 1);
+        $categorySlug = is_string($request->query('category')) ? $request->query('category') : null;
+        $search = is_string($request->query('search')) ? $request->query('search') : null;
+        $sort = (string) $request->query('sort', 'popular');
+        $page = (int) $request->query('page', '1');
 
         $categories = Cache::remember('catalog:categories', now()->addHour(), function () {
             return Category::active()->roots()->orderBy('sort_order')
@@ -42,22 +42,22 @@ class CatalogController extends Controller
         });
 
         $categoryName = null;
-        $categoryId   = null;
+        $categoryId = null;
 
         if ($categorySlug) {
-            $category     = Category::where('slug', $categorySlug)->firstOrFail();
+            $category = Category::where('slug', $categorySlug)->firstOrFail();
             $categoryName = $category->name;
-            $categoryId   = $category->id;
+            $categoryId = $category->id;
         }
 
-        $cacheKey = 'catalog:page:' . md5("{$categorySlug}:{$sort}:{$page}");
-        $ttl      = now()->addMinutes(3);
+        $cacheKey = 'catalog:page:'.md5("{$categorySlug}:{$sort}:{$page}");
+        $ttl = now()->addMinutes(3);
 
         if ($search) {
             $paginator = $this->buildQuery($categoryId, $search, $sort)->paginate(12)->withQueryString();
             $paginator->withPath('/catalog');
             $paginatorArray = $paginator->toArray();
-            $items          = ProductListResource::collection($paginator->items())->resolve();
+            $items = ProductListResource::collection($paginator->items())->resolve();
         } else {
             $cached = Cache::remember($cacheKey, $ttl, function () use ($categoryId, $sort) {
                 $paginator = $this->buildQuery($categoryId, null, $sort)->paginate(12)->withQueryString();
@@ -65,12 +65,12 @@ class CatalogController extends Controller
                 $arr = $paginator->toArray();
 
                 return [
-                    'links'        => $arr['links'],
+                    'links' => $arr['links'],
                     'current_page' => $paginator->currentPage(),
-                    'last_page'    => $paginator->lastPage(),
-                    'per_page'     => $paginator->perPage(),
-                    'total'        => $paginator->total(),
-                    'items'        => ProductListResource::collection($paginator->items())->resolve(),
+                    'last_page' => $paginator->lastPage(),
+                    'per_page' => $paginator->perPage(),
+                    'total' => $paginator->total(),
+                    'items' => ProductListResource::collection($paginator->items())->resolve(),
                 ];
             });
 
@@ -80,20 +80,20 @@ class CatalogController extends Controller
 
         return response()->json([
             'products' => [
-                'data'         => $items,
-                'links'        => $paginatorArray['links'],
+                'data' => $items,
+                'links' => $paginatorArray['links'],
                 'current_page' => $paginatorArray['current_page'],
-                'last_page'    => $paginatorArray['last_page'],
-                'per_page'     => $paginatorArray['per_page'],
-                'total'        => $paginatorArray['total'],
+                'last_page' => $paginatorArray['last_page'],
+                'per_page' => $paginatorArray['per_page'],
+                'total' => $paginatorArray['total'],
             ],
-            'categories'      => $categories,
+            'categories' => $categories,
             'currentCategory' => $categorySlug,
-            'categoryName'    => $categoryName,
-            'currentSort'     => $sort,
-            'currentSearch'   => $search ?? '',
-            'categoryCounts'  => $categoryCounts,
-            'totalCount'      => $allProductsCount,
+            'categoryName' => $categoryName,
+            'currentSort' => $sort,
+            'currentSearch' => $search ?? '',
+            'categoryCounts' => $categoryCounts,
+            'totalCount' => $allProductsCount,
         ]);
     }
 
@@ -102,7 +102,7 @@ class CatalogController extends Controller
         $data = Cache::remember('catalog:all', now()->addMinutes(10), function () {
             $products = Product::published()
                 ->with([
-                    'images'     => fn ($q) => $q->orderBy('sort_order')->limit(1),
+                    'images' => fn ($q) => $q->orderBy('sort_order')->limit(1),
                     'categories',
                     'attributes' => fn ($q) => $q->orderBy('sort_order'),
                 ])
@@ -114,7 +114,7 @@ class CatalogController extends Controller
                 ->get(['id', 'name', 'slug', 'sort_order', 'is_active']);
 
             return [
-                'products'   => ProductListResource::collection($products)->resolve(),
+                'products' => ProductListResource::collection($products)->resolve(),
                 'categories' => $categories,
                 'totalCount' => $products->count(),
             ];
@@ -128,7 +128,7 @@ class CatalogController extends Controller
         $product = Product::published()
             ->where('slug', $slug)
             ->with([
-                'images'     => fn ($q) => $q->orderBy('sort_order'),
+                'images' => fn ($q) => $q->orderBy('sort_order'),
                 'categories',
                 'attributes' => fn ($q) => $q->orderBy('sort_order'),
             ])
@@ -148,18 +148,18 @@ class CatalogController extends Controller
         $relatedProducts = $relatedPool->shuffle()->take(4);
 
         return response()->json([
-            'product'         => new ProductResource($product),
+            'product' => new ProductResource($product),
             'relatedProducts' => ProductListResource::collection($relatedProducts),
         ]);
     }
 
-    private function buildQuery(?int $categoryId, ?string $search, string $sort)
+    private function buildQuery(?int $categoryId, ?string $search, string $sort): mixed
     {
         if ($search) {
             $query = Product::search($search)
                 ->where('is_published', true)
                 ->query(fn ($q) => $q->with([
-                    'images'     => fn ($q) => $q->orderBy('sort_order')->limit(1),
+                    'images' => fn ($q) => $q->orderBy('sort_order')->limit(1),
                     'categories',
                     'attributes' => fn ($q) => $q->orderBy('sort_order'),
                 ]));
@@ -173,7 +173,7 @@ class CatalogController extends Controller
 
         $query = Product::published()
             ->with([
-                'images'     => fn ($q) => $q->orderBy('sort_order')->limit(1),
+                'images' => fn ($q) => $q->orderBy('sort_order')->limit(1),
                 'categories',
                 'attributes' => fn ($q) => $q->orderBy('sort_order'),
             ]);
@@ -183,10 +183,10 @@ class CatalogController extends Controller
         }
 
         match ($sort) {
-            'price_asc'  => $query->orderBy('price'),
+            'price_asc' => $query->orderBy('price'),
             'price_desc' => $query->orderByDesc('price'),
-            'name'       => $query->orderBy('name'),
-            default      => $query->latest(),
+            'name' => $query->orderBy('name'),
+            default => $query->latest(),
         };
 
         return $query;

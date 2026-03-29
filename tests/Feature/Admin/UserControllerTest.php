@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Order;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 
@@ -14,6 +15,7 @@ function makeAdminForUsers(): User
 {
     $user = User::factory()->create();
     $user->assignRole('admin');
+
     return $user;
 }
 
@@ -89,11 +91,11 @@ describe('Admin\UserController', function () {
 
             $this->actingAs($admin)
                 ->postJson('/api/admin/users', [
-                    'name'                  => 'Новый Менеджер',
-                    'email'                 => 'newmanager@example.com',
-                    'password'              => 'password123',
+                    'name' => 'Новый Менеджер',
+                    'email' => 'newmanager@example.com',
+                    'password' => 'password123',
                     'password_confirmation' => 'password123',
-                    'role'                  => 'order_manager',
+                    'role' => 'order_manager',
                 ])
                 ->assertStatus(201)
                 ->assertJsonPath('message', 'Пользователь создан')
@@ -120,10 +122,10 @@ describe('Admin\UserController', function () {
 
             $this->actingAs($admin)
                 ->postJson('/api/admin/users', [
-                    'name'     => 'Someone',
-                    'email'    => 'taken@example.com',
+                    'name' => 'Someone',
+                    'email' => 'taken@example.com',
                     'password' => 'password123',
-                    'role'     => 'customer',
+                    'role' => 'customer',
                 ])
                 ->assertStatus(422)
                 ->assertJsonValidationErrors(['email']);
@@ -134,10 +136,10 @@ describe('Admin\UserController', function () {
 
             $this->actingAs($admin)
                 ->postJson('/api/admin/users', [
-                    'name'     => 'Test User',
-                    'email'    => 'testuser@example.com',
+                    'name' => 'Test User',
+                    'email' => 'testuser@example.com',
                     'password' => 'password123',
-                    'role'     => 'superadmin',
+                    'role' => 'superadmin',
                 ])
                 ->assertStatus(422)
                 ->assertJsonValidationErrors(['role']);
@@ -245,7 +247,7 @@ describe('Admin\UserController', function () {
             $customer = User::factory()->create();
             $customer->assignRole('customer');
 
-            \App\Models\Order::factory()->create(['user_id' => $customer->id]);
+            Order::factory()->create(['user_id' => $customer->id]);
 
             $this->actingAs($admin)
                 ->deleteJson("/api/admin/users/{$customer->id}")

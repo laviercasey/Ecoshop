@@ -15,6 +15,7 @@ function makeAdminForOrders(): User
 {
     $user = User::factory()->create();
     $user->assignRole('admin');
+
     return $user;
 }
 

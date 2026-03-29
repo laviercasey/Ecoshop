@@ -90,10 +90,10 @@ describe('Admin\CategoryController', function () {
             $admin = makeCategoryAdmin();
 
             $payload = [
-                'name'        => 'Eco Living',
+                'name' => 'Eco Living',
                 'description' => 'Products for sustainable living',
-                'sort_order'  => 1,
-                'is_active'   => true,
+                'sort_order' => 1,
+                'is_active' => true,
             ];
 
             $response = $this->actingAs($admin, 'sanctum')
@@ -101,9 +101,9 @@ describe('Admin\CategoryController', function () {
 
             $response->assertStatus(201)
                 ->assertJson([
-                    'message'  => 'Категория создана',
+                    'message' => 'Категория создана',
                     'category' => [
-                        'name'      => 'Eco Living',
+                        'name' => 'Eco Living',
                         'parent_id' => null,
                         'is_active' => true,
                     ],
@@ -117,7 +117,7 @@ describe('Admin\CategoryController', function () {
             $parent = Category::factory()->create();
 
             $payload = [
-                'name'      => 'Bamboo Products',
+                'name' => 'Bamboo Products',
                 'parent_id' => $parent->id,
                 'is_active' => true,
             ];
@@ -127,9 +127,9 @@ describe('Admin\CategoryController', function () {
 
             $response->assertStatus(201)
                 ->assertJson([
-                    'message'  => 'Категория создана',
+                    'message' => 'Категория создана',
                     'category' => [
-                        'name'      => 'Bamboo Products',
+                        'name' => 'Bamboo Products',
                         'parent_id' => $parent->id,
                     ],
                 ]);
@@ -193,12 +193,12 @@ describe('Admin\CategoryController', function () {
 
             $response->assertOk()
                 ->assertJson([
-                    'message'  => 'Категория обновлена',
+                    'message' => 'Категория обновлена',
                     'category' => ['name' => 'New Category Name'],
                 ]);
 
             $this->assertDatabaseHas('categories', [
-                'id'   => $category->id,
+                'id' => $category->id,
                 'name' => 'New Category Name',
             ]);
         });
@@ -228,7 +228,7 @@ describe('Admin\CategoryController', function () {
             $this->assertDatabaseMissing('categories', ['id' => $category->id]);
             $this->assertDatabaseMissing('category_product', [
                 'category_id' => $category->id,
-                'product_id'  => $product->id,
+                'product_id' => $product->id,
             ]);
         });
 

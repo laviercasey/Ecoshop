@@ -14,6 +14,7 @@ function makeAdmin(): User
 {
     $user = User::factory()->create();
     $user->assignRole('admin');
+
     return $user;
 }
 

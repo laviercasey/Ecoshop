@@ -105,11 +105,11 @@ describe('Admin\ProductController', function () {
             $admin = makeProductAdmin();
 
             $payload = [
-                'name'        => 'Organic Cotton Bag',
-                'sku'         => 'ECO-BAG-001',
+                'name' => 'Organic Cotton Bag',
+                'sku' => 'ECO-BAG-001',
                 'description' => 'Eco-friendly cotton bag',
-                'price'       => 12.99,
-                'stock'       => 50,
+                'price' => 12.99,
+                'stock' => 50,
                 'is_published' => true,
             ];
 
@@ -120,8 +120,8 @@ describe('Admin\ProductController', function () {
                 ->assertJson([
                     'message' => 'Товар создан',
                     'product' => [
-                        'name'  => 'Organic Cotton Bag',
-                        'sku'   => 'ECO-BAG-001',
+                        'name' => 'Organic Cotton Bag',
+                        'sku' => 'ECO-BAG-001',
                         'price' => 12.99,
                     ],
                 ]);
@@ -134,9 +134,9 @@ describe('Admin\ProductController', function () {
             $category = Category::factory()->create();
 
             $payload = [
-                'name'       => 'Bamboo Cutlery Set',
-                'sku'        => 'ECO-BCT-001',
-                'price'      => 8.50,
+                'name' => 'Bamboo Cutlery Set',
+                'sku' => 'ECO-BCT-001',
+                'price' => 8.50,
                 'categories' => [$category->id],
             ];
 
@@ -166,7 +166,7 @@ describe('Admin\ProductController', function () {
             $admin = makeProductAdmin();
 
             $payload = [
-                'name'  => 'Bad Product',
+                'name' => 'Bad Product',
                 'price' => -5.00,
             ];
 
@@ -218,7 +218,7 @@ describe('Admin\ProductController', function () {
 
             $response = $this->actingAs($admin, 'sanctum')
                 ->putJson("/api/admin/products/{$product->id}", [
-                    'name'  => 'New Name',
+                    'name' => 'New Name',
                     'price' => 25.00,
                 ]);
 
@@ -229,8 +229,8 @@ describe('Admin\ProductController', function () {
                 ]);
 
             $this->assertDatabaseHas('products', [
-                'id'    => $product->id,
-                'name'  => 'New Name',
+                'id' => $product->id,
+                'name' => 'New Name',
                 'price' => 25.00,
             ]);
         });

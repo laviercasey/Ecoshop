@@ -34,6 +34,6 @@ class SettingsSeeder extends Seeder
             );
         }
 
-        $this->command->info('Settings seeded: ' . Setting::count() . ' total');
+        $this->command->info('Settings seeded: '.Setting::count().' total');
     }
 }

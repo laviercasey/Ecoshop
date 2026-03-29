@@ -11,10 +11,11 @@ class EnsureUserIsAdmin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->user()) {
+        $user = $request->user();
+        if (! $user) {
             return response()->json(['message' => 'Требуется авторизация'], 401);
         }
-        if (!$request->user()->hasRole(UserRole::Admin->value)) {
+        if (! $user->hasRole(UserRole::Admin->value)) {
             return response()->json(['message' => 'Доступ запрещён'], 403);
         }
 

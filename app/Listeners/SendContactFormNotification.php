@@ -18,7 +18,7 @@ class SendContactFormNotification implements ShouldQueue
     public function handle(ContactFormSubmitted $event): void
     {
         $adminEmail = Setting::get('general', 'email');
-        if (!$adminEmail) {
+        if (! $adminEmail) {
             return;
         }
 

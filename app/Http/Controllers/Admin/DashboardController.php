@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -16,7 +17,7 @@ class DashboardController extends Controller
     public function index(): JsonResponse
     {
         $now = now();
-        $cacheKey = 'dashboard.' . $now->format('Y-m');
+        $cacheKey = 'dashboard.'.$now->format('Y-m');
 
         $payload = Cache::remember($cacheKey, 60, function () use ($now) {
             return $this->buildDashboard($now);
@@ -25,17 +26,17 @@ class DashboardController extends Controller
         return response()->json($payload);
     }
 
-    private function buildDashboard(\Illuminate\Support\Carbon $now): array
+    private function buildDashboard(Carbon $now): array
     {
         $currentMonth = Order::whereMonth('created_at', $now->month)
             ->whereYear('created_at', $now->year)
-            ->whereNotIn('status', [\App\Enums\OrderStatus::Cancelled->value])
+            ->whereNotIn('status', [OrderStatus::Cancelled->value])
             ->sum('total');
 
         $previousMonth = $now->copy()->subMonth();
         $previousMonthRevenue = Order::whereMonth('created_at', $previousMonth->month)
             ->whereYear('created_at', $previousMonth->year)
-            ->whereNotIn('status', [\App\Enums\OrderStatus::Cancelled->value])
+            ->whereNotIn('status', [OrderStatus::Cancelled->value])
             ->sum('total');
 
         $revenueChange = $previousMonthRevenue > 0
@@ -57,13 +58,13 @@ class DashboardController extends Controller
 
         $averageOrder = Order::whereMonth('created_at', $now->month)
             ->whereYear('created_at', $now->year)
-            ->whereNotIn('status', [\App\Enums\OrderStatus::Cancelled->value])
+            ->whereNotIn('status', [OrderStatus::Cancelled->value])
             ->avg('total') ?? 0;
 
         $recentOrders = Order::latest()
             ->take(10)
             ->get()
-            ->map(fn ($order) => [
+            ->map(fn (Order $order) => [
                 'id' => $order->id,
                 'number' => $order->number,
                 'customer_name' => $order->customer_name,
@@ -71,7 +72,7 @@ class DashboardController extends Controller
                 'status' => $order->status->value,
                 'status_label' => $order->status->label(),
                 'status_color' => $order->status->color(),
-                'created_at' => $order->created_at->toISOString(),
+                'created_at' => $order->created_at?->toISOString(),
             ]);
 
         $topProducts = Product::query()
@@ -96,8 +97,8 @@ class DashboardController extends Controller
             ->map(fn ($product) => [
                 'id' => $product->id,
                 'name' => $product->name,
-                'total_sold' => (int) $product->total_sold,
-                'total_revenue' => (float) $product->total_revenue,
+                'total_sold' => (int) $product->getAttribute('total_sold'),
+                'total_revenue' => (float) $product->getAttribute('total_revenue'),
             ]);
 
         return [

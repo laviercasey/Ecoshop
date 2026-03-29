@@ -74,9 +74,9 @@ class PageController extends Controller
     {
         $allowedTags = ['p', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'ul', 'ol', 'li', 'h2', 'h3', 'h4', 'blockquote', 'section', 'a'];
 
-        $html = strip_tags($html, '<' . implode('><', $allowedTags) . '>');
+        $html = strip_tags($html, '<'.implode('><', $allowedTags).'>');
 
-        return preg_replace_callback(
+        return (string) preg_replace_callback(
             '/<(\w+)(\s[^>]*)?>/',
             function ($matches) {
                 $tag = $matches[1];
@@ -84,11 +84,11 @@ class PageController extends Controller
 
                 $safe = '';
                 if (preg_match('/\bclass\s*=\s*"([^"]*)"/', $attrs, $m)) {
-                    $safe .= ' class="' . htmlspecialchars($m[1], ENT_QUOTES) . '"';
+                    $safe .= ' class="'.htmlspecialchars($m[1], ENT_QUOTES).'"';
                 }
                 if ($tag === 'a' && preg_match('/\bhref\s*=\s*"([^"]*)"/', $attrs, $m)) {
                     if (preg_match('#^(https?://|/)#', $m[1])) {
-                        $safe .= ' href="' . htmlspecialchars($m[1], ENT_QUOTES) . '"';
+                        $safe .= ' href="'.htmlspecialchars($m[1], ENT_QUOTES).'"';
                     }
                 }
 

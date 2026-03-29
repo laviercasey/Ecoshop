@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Http\Resources\CategoryResource;
+use App\Http\Resources\UserResource;
 use App\Models\Category;
 use App\Models\Setting;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user() ? new \App\Http\Resources\UserResource($request->user()) : null,
+                'user' => $request->user() ? new UserResource($request->user()) : null,
             ],
             'settings' => fn () => [
                 'store_name' => 'EcoShop',
@@ -36,14 +37,13 @@ class HandleInertiaRequests extends Middleware
                     array_flip(['store_name', 'phone', 'email', 'address', 'company_name']),
                 ),
             ],
-            'categories' => fn () => Cache::remember('nav_categories', 60, fn () =>
-                CategoryResource::collection(
-                    Category::active()
-                        ->roots()
-                        ->with(['children' => fn ($q) => $q->active()->orderBy('sort_order')])
-                        ->orderBy('sort_order')
-                        ->get()
-                )
+            'categories' => fn () => Cache::remember('nav_categories', 60, fn () => CategoryResource::collection(
+                Category::active()
+                    ->roots()
+                    ->with(['children' => fn ($q) => $q->active()->orderBy('sort_order')])
+                    ->orderBy('sort_order')
+                    ->get()
+            )
             ),
             'cartCount' => fn () => (int) collect(session('cart', []))->sum(),
             'seo' => [

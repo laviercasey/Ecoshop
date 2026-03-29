@@ -29,7 +29,6 @@ class Setting extends Model
     {
         return Cache::remember("setting_group.{$group}", 300, function () use ($group) {
             return self::where('group', $group)
-                ->get()
                 ->pluck('value', 'key')
                 ->toArray();
         });

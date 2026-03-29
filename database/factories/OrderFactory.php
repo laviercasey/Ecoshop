@@ -18,7 +18,7 @@ class OrderFactory extends Factory
         $subtotal = fake()->randomFloat(2, 100, 5000);
 
         return [
-            'number' => \App\Models\Order::generateNumber(),
+            'number' => Order::generateNumber(),
             'user_id' => User::factory(),
             'status' => OrderStatus::New,
             'subtotal' => $subtotal,

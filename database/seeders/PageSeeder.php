@@ -152,6 +152,6 @@ HTML,
             Page::create($pageData);
         }
 
-        $this->command->info('Pages seeded: ' . Page::count() . ' total');
+        $this->command->info('Pages seeded: '.Page::count().' total');
     }
 }

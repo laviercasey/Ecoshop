@@ -11,10 +11,10 @@ class ContactController extends Controller
     public function submit(ContactFormRequest $request): JsonResponse
     {
         ContactFormSubmitted::dispatch(
-            senderName: $request->input('name'),
-            senderEmail: $request->input('email'),
-            senderPhone: $request->input('phone', ''),
-            messageText: $request->input('message'),
+            senderName: (string) $request->input('name'),
+            senderEmail: (string) $request->input('email'),
+            senderPhone: (string) $request->input('phone', ''),
+            messageText: (string) $request->input('message'),
         );
 
         return response()->json([

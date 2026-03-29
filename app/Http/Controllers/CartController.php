@@ -16,7 +16,7 @@ class CartController extends Controller
         $items = [];
         $subtotal = 0;
 
-        if (!empty($cart)) {
+        if (! empty($cart)) {
             $products = Product::whereIn('id', array_keys($cart))
                 ->published()
                 ->with(['images' => fn ($q) => $q->orderBy('sort_order')->limit(1), 'attributes'])
@@ -24,7 +24,9 @@ class CartController extends Controller
 
             foreach ($products as $product) {
                 $quantity = $cart[$product->id] ?? 0;
-                if ($quantity <= 0) continue;
+                if ($quantity <= 0) {
+                    continue;
+                }
 
                 $specs = $product->attributes->take(3)->pluck('value')->join(' • ');
                 $itemTotal = $product->price * $quantity;
@@ -64,7 +66,7 @@ class CartController extends Controller
         $quantity = $request->input('quantity', 1);
         $cart = session('cart', []);
 
-        if (count($cart) >= 50 && !array_key_exists($productId, $cart)) {
+        if (count($cart) >= 50 && ! array_key_exists($productId, $cart)) {
             return response()->json(['message' => 'Корзина переполнена (максимум 50 позиций)'], 422);
         }
 
@@ -84,7 +86,7 @@ class CartController extends Controller
         $validated = $request->validate([
             'quantity' => ['required', 'integer', 'min:0', 'max:9999'],
         ]);
-        $product = \App\Models\Product::published()->findOrFail($product);
+        $product = Product::published()->findOrFail($product);
 
         $cart = session('cart', []);
 

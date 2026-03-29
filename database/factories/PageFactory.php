@@ -14,7 +14,7 @@ class PageFactory extends Factory
         return [
             'title' => fake()->sentence(3),
             'slug' => fake()->unique()->slug(2),
-            'content' => '<p>' . fake()->paragraphs(3, true) . '</p>',
+            'content' => '<p>'.fake()->paragraphs(3, true).'</p>',
             'meta_title' => fake()->sentence(4),
             'meta_description' => fake()->sentence(10),
             'is_published' => true,

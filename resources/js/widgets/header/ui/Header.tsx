@@ -7,7 +7,7 @@ import { useCartStore } from '@entities/cart';
 import { useAuthStore } from '@entities/user';
 import { MobileMenu } from './MobileMenu';
 
-const NAV_LINKS = [
+const NAV_LINKS: { href: string; label: string }[] = [
   { href: ROUTES.catalog, label: 'Каталог' },
   { href: ROUTES.about, label: 'О бренде' },
   { href: ROUTES.branding, label: 'Брендирование' },

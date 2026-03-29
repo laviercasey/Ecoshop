@@ -1,16 +1,23 @@
 <?php
 
+use App\Http\Middleware\EnsureUserIsAdmin;
+use App\Http\Middleware\EnsureUserIsContentManager;
+use App\Http\Middleware\EnsureUserIsOrderManager;
+use App\Http\Middleware\EnsureUserIsStaff;
+use App\Http\Middleware\HandleInertiaRequests;
+use App\Providers\EventServiceProvider;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
-        App\Providers\EventServiceProvider::class,
+        EventServiceProvider::class,
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -20,14 +27,14 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
-            'order_manager' => \App\Http\Middleware\EnsureUserIsOrderManager::class,
-            'content_manager' => \App\Http\Middleware\EnsureUserIsContentManager::class,
-            'staff' => \App\Http\Middleware\EnsureUserIsStaff::class,
+            'admin' => EnsureUserIsAdmin::class,
+            'order_manager' => EnsureUserIsOrderManager::class,
+            'content_manager' => EnsureUserIsContentManager::class,
+            'staff' => EnsureUserIsStaff::class,
         ]);
 
         $middleware->web(append: [
-            \App\Http\Middleware\HandleInertiaRequests::class,
+            HandleInertiaRequests::class,
         ]);
 
         $middleware->statefulApi();
@@ -49,7 +56,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, Request $request) {
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'message' => 'Требуется авторизация',
@@ -57,7 +64,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        $exceptions->render(function (\Throwable $e, Request $request) {
+        $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 if ($e instanceof ValidationException) {
                     return;

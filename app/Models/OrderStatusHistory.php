@@ -5,7 +5,13 @@ namespace App\Models;
 use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property OrderStatus|null $old_status
+ * @property OrderStatus $new_status
+ * @property Carbon|null $created_at
+ */
 class OrderStatusHistory extends Model
 {
     public $timestamps = false;

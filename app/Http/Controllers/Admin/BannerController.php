@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateBannerRequest;
 use App\Http\Resources\BannerResource;
 use App\Models\Banner;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 class BannerController extends Controller
@@ -25,8 +26,9 @@ class BannerController extends Controller
     {
         $data = $request->validated();
 
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('banners');
+        $imageFile = $request->file('image');
+        if ($imageFile instanceof UploadedFile) {
+            $data['image'] = $imageFile->store('banners');
         }
 
         $banner = Banner::create($data);
@@ -51,9 +53,10 @@ class BannerController extends Controller
         $banner = Banner::findOrFail($id);
         $data = $request->validated();
 
-        if ($request->hasFile('image')) {
+        $imageFile = $request->file('image');
+        if ($imageFile instanceof UploadedFile) {
             $this->deleteStoredImage($banner->image);
-            $data['image'] = $request->file('image')->store('banners');
+            $data['image'] = $imageFile->store('banners');
         }
 
         $banner->update($data);

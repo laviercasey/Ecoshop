@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,6 +14,12 @@ use Laravel\Scout\Searchable;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
 
+/**
+ * @property int|null $stock
+ * @property Collection<int, ProductImage> $images
+ * @property Collection<int, ProductAttribute> $attributes
+ * @property Collection<int, Category> $categories
+ */
 class Product extends Model
 {
     use HasFactory, HasSlug, Searchable, SoftDeletes;
@@ -39,7 +47,6 @@ class Product extends Model
             'price' => 'decimal:2',
             'compare_price' => 'decimal:2',
             'weight' => 'decimal:3',
-            'stock' => 'integer',
             'min_order_qty' => 'integer',
             'is_published' => 'boolean',
         ];
@@ -48,7 +55,7 @@ class Product extends Model
     protected static function booted(): void
     {
         static::forceDeleting(function (Product $product) {
-            $product->images()->each(function (ProductImage $image) {
+            $product->images->each(function (ProductImage $image) {
                 if ($image->path && preg_match('#^products/[^/]+$#', $image->path)) {
                     Storage::delete($image->path);
                 }
@@ -95,12 +102,12 @@ class Product extends Model
         ];
     }
 
-    public function scopePublished($query)
+    public function scopePublished(Builder $query): Builder
     {
         return $query->where('is_published', true);
     }
 
-    public function scopeInStock($query)
+    public function scopeInStock(Builder $query): Builder
     {
         return $query->where('stock', '>', 0);
     }

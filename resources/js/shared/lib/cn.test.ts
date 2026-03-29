@@ -12,7 +12,7 @@ describe('cn', () => {
   });
 
   it('handles conditionals and filters falsy values', () => {
-    const result = cn('base', false && 'hidden', null, undefined, 'visible');
+    const result = cn('base', false, null, undefined, 'visible');
     expect(result).toContain('base');
     expect(result).toContain('visible');
     expect(result).not.toContain('hidden');

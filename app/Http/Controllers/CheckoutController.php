@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Actions\CreateOrderAction;
+use App\Enums\PaymentMethod;
+use App\Enums\ShippingMethod;
 use App\Events\OrderCreated;
 use App\Http\Requests\CheckoutRequest;
 use App\Http\Resources\OrderResource;
-use App\Enums\ShippingMethod;
-use App\Enums\PaymentMethod;
+use App\Models\Order;
 use App\Models\Product;
+use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -25,7 +28,7 @@ class CheckoutController extends Controller
         $items = [];
         $subtotal = 0;
 
-        if (!empty($cart)) {
+        if (! empty($cart)) {
             $products = Product::published()
                 ->whereIn('id', array_keys($cart))
                 ->with(['images' => fn ($q) => $q->orderBy('sort_order')->limit(1)])
@@ -33,17 +36,19 @@ class CheckoutController extends Controller
 
             foreach ($products as $product) {
                 $quantity = $cart[$product->id] ?? 0;
-                if ($quantity <= 0) continue;
+                if ($quantity <= 0) {
+                    continue;
+                }
 
                 $subtotal += $product->price * $quantity;
                 $firstImage = $product->images->first();
 
                 $items[] = [
                     'product_id' => $product->id,
-                    'name'       => $product->name,
-                    'price'      => (float) $product->price,
-                    'quantity'   => $quantity,
-                    'image'      => $firstImage ? Storage::url($firstImage->path) : null,
+                    'name' => $product->name,
+                    'price' => (float) $product->price,
+                    'quantity' => $quantity,
+                    'image' => $firstImage ? Storage::url($firstImage->path) : null,
                 ];
             }
         }
@@ -59,11 +64,11 @@ class CheckoutController extends Controller
         );
 
         return response()->json([
-            'items'          => $items,
-            'subtotal'       => $subtotal,
-            'total'          => $subtotal,
+            'items' => $items,
+            'subtotal' => $subtotal,
+            'total' => $subtotal,
             'shippingMethods' => $shippingMethods,
-            'paymentMethods'  => $paymentMethods,
+            'paymentMethods' => $paymentMethods,
         ]);
     }
 
@@ -75,16 +80,19 @@ class CheckoutController extends Controller
             return response()->json(['message' => 'Корзина пуста'], 422);
         }
 
+        /** @var User $user */
+        $user = $request->user();
+
         try {
             $result = $this->createOrderAction->execute(
                 checkoutData: $request->validated(),
                 cart: $cart,
-                userId: $request->user()->id,
+                userId: $user->id,
             );
+        } catch (UniqueConstraintViolationException) {
+            return response()->json(['message' => 'Попробуйте оформить заказ ещё раз'], 503);
         } catch (\RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
-        } catch (\Illuminate\Database\UniqueConstraintViolationException) {
-            return response()->json(['message' => 'Попробуйте оформить заказ ещё раз'], 503);
         }
 
         session()->forget('cart');
@@ -100,13 +108,17 @@ class CheckoutController extends Controller
 
     public function success(Request $request, int $order): JsonResponse
     {
-        $order = $request->user()->orders()->findOrFail($order);
+        /** @var User $user */
+        $user = $request->user();
+
+        /** @var Order $found */
+        $found = $user->orders()->findOrFail($order);
 
         return response()->json([
             'order' => [
-                'number' => $order->number,
-                'total' => (float) $order->total,
-                'customer_email' => $order->customer_email,
+                'number' => $found->number,
+                'total' => (float) $found->total,
+                'customer_email' => $found->customer_email,
             ],
         ]);
     }

@@ -25,7 +25,7 @@ class CheckoutRequest extends FormRequest
             'customer_note' => ['nullable', 'string', 'max:5000'],
         ];
 
-        if ($this->input('shipping_method') !== ShippingMethod::Pickup->value) {
+        if ((string) $this->input('shipping_method') !== ShippingMethod::Pickup->value) {
             $rules['city'] = ['required', 'string', 'max:255'];
             $rules['street'] = ['required', 'string', 'max:255'];
             $rules['building'] = ['nullable', 'string', 'max:50'];

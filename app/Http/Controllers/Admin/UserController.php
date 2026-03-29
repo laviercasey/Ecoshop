@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
@@ -18,17 +19,19 @@ class UserController extends Controller
     {
         $query = User::with('roles');
 
-        if ($search = $request->query('search')) {
+        $search = $request->query('search');
+        if (is_string($search) && $search !== '') {
             $search = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search);
             $query->where(fn ($q) => $q->where('name', 'like', "%{$search}%")
                 ->orWhere('email', 'like', "%{$search}%"));
         }
 
-        if ($role = $request->query('role')) {
+        $role = $request->query('role');
+        if (is_string($role) && $role !== '') {
             $query->role($role);
         }
 
-        $perPage = min((int) $request->query('per_page', 15), 100);
+        $perPage = min((int) $request->query('per_page', '15'), 100);
         $users = $query->latest()->paginate($perPage);
 
         return response()->json([
@@ -41,10 +44,10 @@ class UserController extends Controller
         $data = $request->validated();
 
         $user = User::create([
-            'name'     => $data['name'],
-            'email'    => $data['email'],
+            'name' => $data['name'],
+            'email' => $data['email'],
             'password' => $data['password'],
-            'phone'    => $data['phone'] ?? null,
+            'phone' => $data['phone'] ?? null,
         ]);
 
         $user->assignRole($data['role']);
@@ -52,7 +55,7 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'Пользователь создан',
-            'user'    => new UserResource($user),
+            'user' => new UserResource($user),
         ], 201);
     }
 
@@ -61,7 +64,7 @@ class UserController extends Controller
         $user = User::findOrFail($id);
         $data = $request->validated();
 
-        if (isset($data['role']) && $user->id === $request->user()->id) {
+        if (isset($data['role']) && $user->id === $request->user()?->id) {
             return response()->json(['message' => 'Нельзя изменить собственную роль'], 422);
         }
 
@@ -89,7 +92,7 @@ class UserController extends Controller
         return DB::transaction(function () use ($request, $id) {
             $user = User::lockForUpdate()->findOrFail($id);
 
-            if ($user->id === $request->user()->id) {
+            if ($user->id === $request->user()?->id) {
                 return response()->json(['message' => 'Нельзя удалить собственный аккаунт'], 422);
             }
 
@@ -97,8 +100,8 @@ class UserController extends Controller
                 return response()->json(['message' => 'Нельзя удалить пользователя с историей заказов'], 422);
             }
 
-            if ($user->hasRole(\App\Enums\UserRole::Admin->value)) {
-                $adminCount = User::role(\App\Enums\UserRole::Admin->value)->count();
+            if ($user->hasRole(UserRole::Admin->value)) {
+                $adminCount = User::role(UserRole::Admin->value)->count();
                 if ($adminCount <= 1) {
                     return response()->json(['message' => 'Нельзя удалить последнего администратора'], 422);
                 }

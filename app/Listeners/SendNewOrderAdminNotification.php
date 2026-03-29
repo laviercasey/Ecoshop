@@ -21,7 +21,7 @@ class SendNewOrderAdminNotification implements ShouldQueue
         $order->loadMissing('items');
 
         $adminEmail = Setting::get('general', 'email');
-        if (!$adminEmail) {
+        if (! $adminEmail) {
             return;
         }
 

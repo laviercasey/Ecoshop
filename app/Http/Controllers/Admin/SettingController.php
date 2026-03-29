@@ -40,7 +40,8 @@ class SettingController extends Controller
     {
         $query = Setting::query();
 
-        if ($group = $request->query('group')) {
+        $group = $request->query('group');
+        if (is_string($group) && $group !== '') {
             $allowed = ['general', 'seo', 'shipping', 'payment', 'notifications'];
             if (in_array($group, $allowed, true)) {
                 $query->where('group', $group);
@@ -66,8 +67,9 @@ class SettingController extends Controller
             $group = $setting['group'];
             $key = $setting['key'];
 
-            if (!in_array($key, self::ALLOWED_KEYS[$group] ?? [], true)) {
+            if (! in_array($key, self::ALLOWED_KEYS[$group] ?? [], true)) {
                 $rejected[] = "{$group}.{$key}";
+
                 continue;
             }
 
@@ -79,9 +81,9 @@ class SettingController extends Controller
             $toWrite[] = $setting;
         }
 
-        if (!empty($rejected)) {
+        if (! empty($rejected)) {
             return response()->json([
-                'message' => 'Некоторые ключи настроек не разрешены: ' . implode(', ', $rejected),
+                'message' => 'Некоторые ключи настроек не разрешены: '.implode(', ', $rejected),
             ], 422);
         }
 

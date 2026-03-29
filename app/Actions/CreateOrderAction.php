@@ -28,8 +28,9 @@ class CreateOrderAction
             foreach ($productIds as $productId) {
                 $product = $products->get($productId);
 
-                if (!$product) {
+                if (! $product) {
                     $skippedItems[] = ['id' => $productId, 'reason' => 'not_found'];
+
                     continue;
                 }
 
@@ -37,11 +38,13 @@ class CreateOrderAction
 
                 if ($quantity <= 0) {
                     $skippedItems[] = ['id' => $productId, 'name' => $product->name, 'reason' => 'invalid_quantity'];
+
                     continue;
                 }
 
                 if ($product->stock !== null && $product->stock <= 0) {
                     $skippedItems[] = ['id' => $productId, 'name' => $product->name, 'reason' => 'out_of_stock'];
+
                     continue;
                 }
 

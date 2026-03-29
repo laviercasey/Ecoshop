@@ -101,8 +101,8 @@ class ProductSeeder extends Seeder
                 'min_order_qty' => fake()->randomElement([50, 100, 150, 200, 250, 300, 500]),
                 'unit' => fake()->randomElement(['шт', 'уп']),
                 'is_published' => true,
-                'meta_title' => $productData['name'] . ' — купить оптом | EcoShop',
-                'meta_description' => 'Купить ' . mb_strtolower($productData['name']) . ' оптом по выгодной цене. Экологичная упаковка с доставкой по России.',
+                'meta_title' => $productData['name'].' — купить оптом | EcoShop',
+                'meta_description' => 'Купить '.mb_strtolower($productData['name']).' оптом по выгодной цене. Экологичная упаковка с доставкой по России.',
             ]);
 
             $categoryIds = [];
@@ -124,7 +124,7 @@ class ProductSeeder extends Seeder
             }
         }
 
-        $this->command->info('Products seeded: ' . Product::count() . ' total');
+        $this->command->info('Products seeded: '.Product::count().' total');
     }
 
     private function generateDescription(string $name): string
@@ -137,6 +137,6 @@ class ProductSeeder extends Seeder
             'Стильная экологичная упаковка для вашего бизнеса. Возможность нанесения логотипа. Оптимальное соотношение цены и качества.',
         ];
 
-        return $name . '. ' . fake()->randomElement($descriptions);
+        return $name.'. '.fake()->randomElement($descriptions);
     }
 }

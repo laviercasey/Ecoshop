@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\EloquentSortable\Sortable;
@@ -33,7 +34,7 @@ class Banner extends Model implements Sortable
         'sort_when_creating' => true,
     ];
 
-    public function scopeActive($query)
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }

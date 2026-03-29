@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
@@ -33,7 +34,7 @@ class Page extends Model
             ->saveSlugsTo('slug');
     }
 
-    public function scopePublished($query)
+    public function scopePublished(Builder $query): Builder
     {
         return $query->where('is_published', true);
     }

@@ -2,9 +2,13 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\OrderStatusHistory;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin Order */
 class OrderResource extends JsonResource
 {
     public function toArray(Request $request): array
@@ -28,7 +32,7 @@ class OrderResource extends JsonResource
             'shipping_cost' => (float) $this->shipping_cost,
             'total' => (float) $this->total,
             'tracking_number' => $this->tracking_number,
-            'items' => $this->whenLoaded('items', fn () => $this->items->map(fn ($item) => [
+            'items' => $this->whenLoaded('items', fn () => $this->items->map(fn (OrderItem $item) => [ // @phpstan-ignore return.type
                 'id' => $item->id,
                 'product_id' => $item->product_id,
                 'product_name' => $item->product_name,
@@ -37,7 +41,7 @@ class OrderResource extends JsonResource
                 'price' => (float) $item->price,
                 'subtotal' => $item->subtotal(),
             ])),
-            'status_history' => $this->whenLoaded('statusHistory', fn () => $this->statusHistory->map(fn ($h) => [
+            'status_history' => $this->whenLoaded('statusHistory', fn () => $this->statusHistory->map(fn (OrderStatusHistory $h) => [ // @phpstan-ignore return.type
                 'old_status' => $h->old_status?->value,
                 'old_status_label' => $h->old_status?->label(),
                 'new_status' => $h->new_status->value,

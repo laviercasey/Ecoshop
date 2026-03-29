@@ -171,7 +171,7 @@ describe('AuthController', function () {
             $user = User::factory()->create();
             $token = $user->createToken('test-token')->plainTextToken;
 
-            $response = $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+            $response = $this->withHeaders(['Authorization' => 'Bearer '.$token])
                 ->postJson('/api/auth/logout');
 
             $response->assertOk()

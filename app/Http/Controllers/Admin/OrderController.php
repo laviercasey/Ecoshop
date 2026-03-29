@@ -17,21 +17,23 @@ class OrderController extends Controller
     {
         $query = Order::with('items')->latest();
 
-        if ($status = $request->query('status')) {
+        $status = $request->query('status');
+        if (is_string($status) && $status !== '') {
             $orderStatus = OrderStatus::tryFrom($status);
             if ($orderStatus) {
                 $query->byStatus($orderStatus);
             }
         }
 
-        if ($search = $request->query('search')) {
+        $search = $request->query('search');
+        if (is_string($search) && $search !== '') {
             $search = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search);
             $query->where(fn ($q) => $q->where('number', 'like', "%{$search}%")
                 ->orWhere('customer_name', 'like', "%{$search}%")
                 ->orWhere('customer_email', 'like', "%{$search}%"));
         }
 
-        $perPage = min((int) $request->query('per_page', 15), 100);
+        $perPage = min((int) $request->query('per_page', '15'), 100);
         $orders = $query->paginate($perPage);
 
         return response()->json([
@@ -71,7 +73,7 @@ class OrderController extends Controller
             'old_status' => $oldStatus,
             'new_status' => $newStatus,
             'comment' => $data['comment'] ?? null,
-            'author_name' => $request->user()->name,
+            'author_name' => $request->user()?->name,
         ]);
 
         $order->load(['items', 'statusHistory']);

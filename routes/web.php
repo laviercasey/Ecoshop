@@ -1,8 +1,9 @@
 <?php
 
+use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 Route::get('/{any?}', function () {
     $buildIndex = public_path('build/index.html');

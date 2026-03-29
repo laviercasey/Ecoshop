@@ -10,7 +10,7 @@ const HERO_CARDS = [
   { label: 'Популярное', name: 'Тарелка глубокая', spec: '500 мл · Крафт', color: 'bg-orange-primary' },
 ];
 
-function HeroCard({ card, index }: { card: typeof HERO_CARDS[0]; index: number }) {
+function HeroCard({ card }: { card: typeof HERO_CARDS[0]; index: number }) {
   return (
     <div className="w-[200px] shrink-0 rounded-2xl bg-white p-4 shadow-xl">
       <div className="aspect-square rounded-xl bg-bg-primary" />

@@ -73,6 +73,6 @@ class UserSeeder extends Seeder
             $customer->assignRole(UserRole::Customer->value);
         }
 
-        $this->command->info('Users seeded: ' . User::count() . ' total');
+        $this->command->info('Users seeded: '.User::count().' total');
     }
 }

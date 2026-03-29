@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use Database\Factories\PageFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
 
 class Page extends Model
 {
-    use HasSlug;
+    /** @use HasFactory<PageFactory> */
+    use HasFactory, HasSlug;
 
     protected $fillable = [
         'title',

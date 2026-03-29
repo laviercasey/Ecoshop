@@ -128,6 +128,7 @@ describe('CheckoutController', function () {
         it('sends confirmation emails', function () {
             Mail::fake();
 
+            \App\Models\Setting::setValue('general', 'email', 'admin@ecoshop.test');
             $user = User::factory()->create();
             $product = Product::factory()->create(['price' => 100.00]);
 

@@ -140,8 +140,8 @@ describe('CheckoutController', function () {
                     'payment_method' => 'card',
                 ]);
 
-            Mail::assertQueued(OrderConfirmationMail::class);
-            Mail::assertQueued(NewOrderAdminMail::class);
+            Mail::assertSent(OrderConfirmationMail::class);
+            Mail::assertSent(NewOrderAdminMail::class);
         });
 
         it('clears cart after successful order', function () {

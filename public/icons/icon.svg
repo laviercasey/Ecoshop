@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="96" fill="#16a34a"/>
+  <g transform="translate(256,256)">
+    <!-- Shopping bag body -->
+    <rect x="-100" y="-40" width="200" height="160" rx="16" fill="white"/>
+    <!-- Bag handle -->
+    <path d="M-50,-40 C-50,-100 50,-100 50,-40" stroke="white" stroke-width="20" fill="none" stroke-linecap="round"/>
+    <!-- Leaf -->
+    <path d="M0,10 C40,-50 100,-40 100,-40 C100,-40 90,20 40,60 C20,76 0,70 0,70" fill="#16a34a"/>
+    <path d="M0,70 C30,30 80,-20 100,-40" stroke="#dcfce7" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <!-- Leaf veins -->
+    <path d="M25,55 C40,35 60,15 70,0" stroke="#dcfce7" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M10,60 C20,50 30,40 40,30" stroke="#dcfce7" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

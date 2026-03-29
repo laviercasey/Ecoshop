@@ -1,0 +1,31 @@
+export const ROUTES = {
+  home: '/',
+  catalog: '/catalog',
+  product: (slug: string) => `/catalog/${slug}`,
+  about: '/about',
+  branding: '/branding',
+  delivery: '/delivery',
+  contacts: '/contacts',
+  cart: '/cart',
+  checkout: '/checkout',
+  checkoutSuccess: (orderId: string | number) => `/checkout/success/${orderId}`,
+  account: '/account',
+  orderDetail: (id: number) => `/account/orders/${id}`,
+  login: '/login',
+  register: '/register',
+} as const;
+
+export const ADMIN_ROUTES = {
+  dashboard: '/admin',
+  orders: '/admin/orders',
+  orderDetail: (id: string | number) => `/admin/orders/${id}`,
+  products: '/admin/products',
+  productEdit: (id: string | number) => `/admin/products/${id}/edit`,
+  productNew: '/admin/products/new',
+  content: '/admin/content',
+  users: '/admin/users',
+  payment: '/admin/settings/payment',
+  delivery: '/admin/settings/delivery',
+  general: '/admin/settings/general',
+  login: '/admin/login',
+} as const;

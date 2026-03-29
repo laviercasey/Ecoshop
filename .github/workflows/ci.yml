@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_call:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend Tests & Analysis
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: ecoshop_test
+          POSTGRES_USER: ecoshop
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecoshop -d ecoshop_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, pgsql, zip, gd, intl, opcache, exif, bcmath, pcntl, redis
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          sed -i 's/DB_HOST=127.0.0.1/DB_HOST=127.0.0.1/' .env
+          sed -i 's/DB_DATABASE=ecoshop/DB_DATABASE=ecoshop_test/' .env
+          sed -i 's/REDIS_HOST=127.0.0.1/REDIS_HOST=127.0.0.1/' .env
+          php artisan key:generate
+
+      - name: Run Larastan
+        run: vendor/bin/phpstan analyse --no-progress
+
+      - name: Check code style
+        run: vendor/bin/pint --test
+
+      - name: Run Pest tests
+        run: php artisan test --parallel
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: ecoshop_test
+          DB_USERNAME: ecoshop
+          DB_PASSWORD: secret
+          REDIS_HOST: 127.0.0.1
+
+  frontend:
+    name: Frontend Tests & Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: FSD architecture check
+        run: npm run lint:fsd
+
+      - name: Run Vitest
+        run: npm run test:run
+
+      - name: Build
+        run: npm run build

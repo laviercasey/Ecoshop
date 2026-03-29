@@ -4,6 +4,7 @@ use App\Mail\NewOrderAdminMail;
 use App\Mail\OrderConfirmationMail;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
@@ -128,7 +129,7 @@ describe('CheckoutController', function () {
         it('sends confirmation emails', function () {
             Mail::fake();
 
-            \App\Models\Setting::setValue('general', 'email', 'admin@ecoshop.test');
+            Setting::setValue('general', 'email', 'admin@ecoshop.test');
             $user = User::factory()->create();
             $product = Product::factory()->create(['price' => 100.00]);
 

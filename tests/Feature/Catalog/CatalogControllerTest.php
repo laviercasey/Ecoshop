@@ -42,7 +42,7 @@ describe('CatalogController', function () {
             $response = $this->getJson("/api/catalog?category={$category->slug}");
 
             $response->assertOk();
-            $products = $response->json('products');
+            $products = $response->json('products.data');
             expect($products)->toHaveCount(1);
             expect($products[0]['id'])->toBe($inCategory->id);
         });
@@ -60,7 +60,7 @@ describe('CatalogController', function () {
             $response = $this->getJson('/api/catalog?search=Bamboo');
 
             $response->assertOk();
-            $products = $response->json('products');
+            $products = $response->json('products.data');
             expect($products)->toHaveCount(1);
             expect($products[0]['name'])->toBe('Bamboo Toothbrush');
         });
@@ -73,7 +73,7 @@ describe('CatalogController', function () {
             $response = $this->getJson('/api/catalog?sort=price_asc');
 
             $response->assertOk();
-            $prices = array_column($response->json('products'), 'price');
+            $prices = array_column($response->json('products.data'), 'price');
             expect($prices[0])->toBeLessThanOrEqual($prices[1]);
             expect($prices[1])->toBeLessThanOrEqual($prices[2]);
         });
@@ -86,7 +86,7 @@ describe('CatalogController', function () {
             $response = $this->getJson('/api/catalog?sort=price_desc');
 
             $response->assertOk();
-            $prices = array_column($response->json('products'), 'price');
+            $prices = array_column($response->json('products.data'), 'price');
             expect($prices[0])->toBeGreaterThanOrEqual($prices[1]);
             expect($prices[1])->toBeGreaterThanOrEqual($prices[2]);
         });

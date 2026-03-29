@@ -83,6 +83,7 @@ jobs:
           DB_USERNAME: ecoshop
           DB_PASSWORD: secret
           REDIS_HOST: 127.0.0.1
+          SCOUT_DRIVER: collection
 
   frontend:
     name: Frontend Tests & Analysis

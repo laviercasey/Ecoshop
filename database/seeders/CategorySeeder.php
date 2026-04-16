@@ -27,12 +27,14 @@ class CategorySeeder extends Seeder
         ];
 
         foreach ($categories as $index => $categoryData) {
-            Category::create([
-                'name' => $categoryData['name'],
-                'description' => $categoryData['description'],
-                'sort_order' => ($index + 1) * 10,
-                'is_active' => true,
-            ]);
+            Category::firstOrCreate(
+                ['name' => $categoryData['name']],
+                [
+                    'description' => $categoryData['description'],
+                    'sort_order' => ($index + 1) * 10,
+                    'is_active' => true,
+                ]
+            );
         }
 
         $this->command->info('Categories seeded: '.Category::count().' total');

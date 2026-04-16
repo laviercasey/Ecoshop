@@ -18,6 +18,12 @@ class OrderSeeder extends Seeder
     {
         $this->command->info('Creating orders...');
 
+        if (Order::count() > 0) {
+            $this->command->info('Orders already seeded. Skipping.');
+
+            return;
+        }
+
         $customers = User::role('customer')->get();
 
         if ($customers->isEmpty()) {

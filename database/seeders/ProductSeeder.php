@@ -91,19 +91,21 @@ class ProductSeeder extends Seeder
         $categoryMap = Category::pluck('id', 'name');
 
         foreach ($products as $productData) {
-            $product = Product::create([
-                'sku' => $productData['sku'],
-                'name' => $productData['name'],
-                'description' => $this->generateDescription($productData['name']),
-                'price' => $productData['price'],
-                'compare_price' => $productData['compare_price'],
-                'stock' => fake()->numberBetween(100, 5000),
-                'min_order_qty' => fake()->randomElement([50, 100, 150, 200, 250, 300, 500]),
-                'unit' => fake()->randomElement(['шт', 'уп']),
-                'is_published' => true,
-                'meta_title' => $productData['name'].' — купить оптом | EcoShop',
-                'meta_description' => 'Купить '.mb_strtolower($productData['name']).' оптом по выгодной цене. Экологичная упаковка с доставкой по России.',
-            ]);
+            $product = Product::firstOrCreate(
+                ['sku' => $productData['sku']],
+                [
+                    'name' => $productData['name'],
+                    'description' => $this->generateDescription($productData['name']),
+                    'price' => $productData['price'],
+                    'compare_price' => $productData['compare_price'],
+                    'stock' => fake()->numberBetween(100, 5000),
+                    'min_order_qty' => fake()->randomElement([50, 100, 150, 200, 250, 300, 500]),
+                    'unit' => fake()->randomElement(['шт', 'уп']),
+                    'is_published' => true,
+                    'meta_title' => $productData['name'].' — купить оптом | EcoShop',
+                    'meta_description' => 'Купить '.mb_strtolower($productData['name']).' оптом по выгодной цене. Экологичная упаковка с доставкой по России.',
+                ]
+            );
 
             $categoryIds = [];
             foreach ($productData['categories'] as $categoryName) {
@@ -113,14 +115,15 @@ class ProductSeeder extends Seeder
             }
             $product->categories()->syncWithoutDetaching($categoryIds);
 
-            foreach ($productData['attrs'] as $sortOrder => $attr) {
-                ProductAttribute::create([
-                    'product_id' => $product->id,
-                    'name' => $attr[0],
-                    'value' => $attr[1],
-                    'sort_order' => ($sortOrder + 1) * 10,
-                ]
-                );
+            if ($product->wasRecentlyCreated) {
+                foreach ($productData['attrs'] as $sortOrder => $attr) {
+                    ProductAttribute::create([
+                        'product_id' => $product->id,
+                        'name' => $attr[0],
+                        'value' => $attr[1],
+                        'sort_order' => ($sortOrder + 1) * 10,
+                    ]);
+                }
             }
         }
 

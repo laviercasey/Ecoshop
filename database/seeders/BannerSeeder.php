@@ -36,7 +36,7 @@ class BannerSeeder extends Seeder
         ];
 
         foreach ($banners as $bannerData) {
-            Banner::create($bannerData);
+            Banner::firstOrCreate(['title' => $bannerData['title']], $bannerData);
         }
 
         $this->command->info('Banners seeded: '.Banner::count().' total');

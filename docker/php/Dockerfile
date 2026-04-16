@@ -1,3 +1,13 @@
+FROM node:22-alpine AS frontend
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
 FROM composer:latest AS vendor
 
 WORKDIR /app
@@ -13,6 +23,7 @@ RUN composer install \
     --ignore-platform-reqs
 
 COPY . .
+COPY --from=frontend /app/public/build ./public/build
 
 RUN composer dump-autoload --optimize --no-dev --ignore-platform-reqs
 

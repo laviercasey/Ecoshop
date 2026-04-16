@@ -76,7 +76,7 @@ jobs:
           script: |
             cd ${{ vars.DEPLOY_PATH }}
 
-            docker pull ghcr.io/${{ github.repository }}:latest
+            docker pull ghcr.io/laviercasey/ecoshop:latest
 
             docker compose -f docker-compose.prod.yml down app queue
             docker compose -f docker-compose.prod.yml up -d

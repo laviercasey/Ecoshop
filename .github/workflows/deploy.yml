@@ -78,14 +78,16 @@ jobs:
 
             docker pull ghcr.io/${{ github.repository }}:latest
 
-            docker compose down app
-            docker compose up -d app
+            docker compose -f docker-compose.prod.yml down app queue
+            docker compose -f docker-compose.prod.yml up -d
 
-            docker compose exec -T app php artisan migrate --force --isolated
-            docker compose exec -T app php artisan config:cache
-            docker compose exec -T app php artisan route:cache
-            docker compose exec -T app php artisan view:cache
+            docker compose -f docker-compose.prod.yml exec -T app php artisan migrate --force --isolated
+            docker compose -f docker-compose.prod.yml exec -T app php artisan config:cache
+            docker compose -f docker-compose.prod.yml exec -T app php artisan route:cache
+            docker compose -f docker-compose.prod.yml exec -T app php artisan view:cache
+            docker compose -f docker-compose.prod.yml exec -T app php artisan queue:restart
 
+            docker image prune -f
             echo "Deployed successfully: $(date)"
 
       - name: Health check

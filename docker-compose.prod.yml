@@ -1,0 +1,106 @@
+services:
+  app:
+    image: ghcr.io/laviercasey/Ecoshop:latest
+    container_name: ecoshop-app
+    restart: unless-stopped
+    env_file: .env
+    expose:
+      - "9000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ecoshop-internal
+      - caddy-net
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
+  queue:
+    image: ghcr.io/laviercasey/Ecoshop:latest
+    container_name: ecoshop-queue
+    restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ecoshop-internal
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: ecoshop-postgres
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecoshop -d ecoshop"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ecoshop-internal
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    container_name: ecoshop-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - ecoshop-internal
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.13
+    container_name: ecoshop-meilisearch
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: ${MEILISEARCH_KEY}
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - ecoshop-internal
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+volumes:
+  postgres_data:
+  redis_data:
+  meilisearch_data:
+
+networks:
+  ecoshop-internal:
+    driver: bridge
+  caddy-net:
+    external: true

@@ -78,6 +78,11 @@ jobs:
 
             docker pull ghcr.io/laviercasey/ecoshop:latest
 
+            docker run --rm --entrypoint sh --user 0 \
+              -v ecoshop_public:/dest \
+              ghcr.io/laviercasey/ecoshop:latest \
+              -c "rm -rf /dest/* && cp -R /var/www/html/public/. /dest/"
+
             docker compose -f docker-compose.prod.yml down app queue
             docker compose -f docker-compose.prod.yml up -d
 

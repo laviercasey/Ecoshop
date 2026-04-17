@@ -82,21 +82,22 @@ class OrderSeeder extends Seeder
 
         for ($i = 0; $i < 50; $i++) {
             $customer = $customers->random();
-            $status = fake()->randomElement($statuses);
-            $shippingMethod = fake()->randomElement($shippingMethods);
-            $paymentMethod = fake()->randomElement($paymentMethods);
-            $address = fake()->randomElement($cities);
+            $status = $statuses[array_rand($statuses)];
+            $shippingMethod = $shippingMethods[array_rand($shippingMethods)];
+            $paymentMethod = $paymentMethods[array_rand($paymentMethods)];
+            $address = $cities[array_rand($cities)];
+            $shippingCosts = [0, 250, 300, 350, 450, 500];
             $shippingCost = $shippingMethod === ShippingMethod::Pickup
                 ? 0
-                : fake()->randomElement([0, 250, 300, 350, 450, 500]);
+                : $shippingCosts[array_rand($shippingCosts)];
 
-            $itemCount = fake()->numberBetween(1, 5);
+            $itemCount = random_int(1, 5);
             $selectedProducts = $products->random($itemCount);
             $subtotal = 0;
             $itemsData = [];
 
             foreach ($selectedProducts as $product) {
-                $quantity = fake()->numberBetween(
+                $quantity = random_int(
                     $product->min_order_qty,
                     $product->min_order_qty * 3
                 );
@@ -121,7 +122,7 @@ class OrderSeeder extends Seeder
                 'payment_method' => $paymentMethod,
                 'shipping_method' => $shippingMethod,
                 'tracking_number' => in_array($status, [OrderStatus::Shipped, OrderStatus::Delivered])
-                    ? 'TRK'.fake()->numerify('##########')
+                    ? 'TRK'.str_pad((string) random_int(0, 9999999999), 10, '0', STR_PAD_LEFT)
                     : null,
                 'customer_name' => $customer->name,
                 'customer_email' => $customer->email,
@@ -155,11 +156,7 @@ class OrderSeeder extends Seeder
                     OrderStatus::Processing->value => 'Заказ принят в обработку',
                     OrderStatus::Shipped->value => 'Заказ передан в службу доставки',
                     OrderStatus::Delivered->value => 'Заказ доставлен получателю',
-                    OrderStatus::Cancelled->value => fake()->randomElement([
-                        'Отменён по просьбе клиента',
-                        'Товар отсутствует на складе',
-                        'Клиент не подтвердил заказ',
-                    ]),
+                    OrderStatus::Cancelled->value => ['Отменён по просьбе клиента', 'Товар отсутствует на складе', 'Клиент не подтвердил заказ'][array_rand(['Отменён по просьбе клиента', 'Товар отсутствует на складе', 'Клиент не подтвердил заказ'])],
                 ];
 
                 foreach ($transitions as $transition) {

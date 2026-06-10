@@ -32,6 +32,8 @@ interface OrdersResponse {
 const STATUS_TABS = [
   { key: '', label: 'Все' },
   { key: 'new', label: 'Новые' },
+  { key: 'pending_payment', label: 'Ждут оплаты' },
+  { key: 'paid', label: 'Оплачены' },
   { key: 'processing', label: 'В обработке' },
   { key: 'shipped', label: 'Отправлены' },
   { key: 'delivered', label: 'Доставлены' },

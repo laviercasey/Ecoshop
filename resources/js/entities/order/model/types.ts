@@ -1,4 +1,4 @@
-export type OrderStatus = 'new' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type OrderStatus = 'new' | 'pending_payment' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
 export type PaymentMethod = 'card' | 'cash' | 'sbp';
 

@@ -4,8 +4,10 @@ use App\Enums\OrderStatus;
 
 describe('OrderStatus', function () {
     it('has all expected cases', function () {
-        expect(OrderStatus::cases())->toHaveCount(5);
+        expect(OrderStatus::cases())->toHaveCount(7);
         expect(OrderStatus::New->value)->toBe('new');
+        expect(OrderStatus::PendingPayment->value)->toBe('pending_payment');
+        expect(OrderStatus::Paid->value)->toBe('paid');
         expect(OrderStatus::Processing->value)->toBe('processing');
         expect(OrderStatus::Shipped->value)->toBe('shipped');
         expect(OrderStatus::Delivered->value)->toBe('delivered');
@@ -27,6 +29,8 @@ describe('OrderStatus', function () {
 
     it('returns correct Russian labels', function () {
         expect(OrderStatus::New->label())->toBe('Новый');
+        expect(OrderStatus::PendingPayment->label())->toBe('Ожидает оплаты');
+        expect(OrderStatus::Paid->label())->toBe('Оплачен');
         expect(OrderStatus::Processing->label())->toBe('В обработке');
         expect(OrderStatus::Shipped->label())->toBe('Отправлен');
         expect(OrderStatus::Delivered->label())->toBe('Доставлен');

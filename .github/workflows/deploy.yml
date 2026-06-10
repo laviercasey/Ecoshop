@@ -74,6 +74,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
+            set -e
             cd ${{ vars.DEPLOY_PATH }}
 
             docker pull ghcr.io/laviercasey/ecoshop:latest

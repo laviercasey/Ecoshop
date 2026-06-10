@@ -26,7 +26,7 @@ services:
     image: ghcr.io/laviercasey/ecoshop:latest
     container_name: ecoshop-queue
     restart: unless-stopped
-    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    command: php artisan horizon
     env_file: .env
     volumes:
       - storage_data:/var/www/html/storage/app
@@ -42,6 +42,25 @@ services:
         limits:
           cpus: "0.5"
           memory: 256M
+
+  scheduler:
+    image: ghcr.io/laviercasey/ecoshop:latest
+    container_name: ecoshop-scheduler
+    restart: unless-stopped
+    command: php artisan schedule:work
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ecoshop-internal
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
 
   postgres:
     image: postgres:17-alpine

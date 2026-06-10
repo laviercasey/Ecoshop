@@ -12,4 +12,4 @@ Route::get('/{any?}', function () {
     }
 
     return view('app');
-})->where('any', '^(?!api).*$')->name('spa');
+})->where('any', '^(?!api|horizon).*$')->name('spa');

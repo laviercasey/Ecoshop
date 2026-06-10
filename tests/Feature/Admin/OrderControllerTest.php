@@ -3,6 +3,7 @@
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
+use App\Models\Product;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 
@@ -161,6 +162,61 @@ describe('Admin\OrderController', function () {
             expect($history->old_status)->toBe(OrderStatus::New);
             expect($history->new_status)->toBe(OrderStatus::Shipped);
             expect($history->comment)->toBe('Отправлен почтой');
+        });
+
+        it('restores product stock when order is cancelled', function () {
+            $admin = makeAdminForOrders();
+            $product = Product::factory()->create(['stock' => 5]);
+            $order = Order::factory()->create(['status' => OrderStatus::New]);
+            $order->items()->create([
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'product_sku' => $product->sku,
+                'quantity' => 3,
+                'price' => $product->price,
+            ]);
+
+            $this->actingAs($admin)
+                ->patchJson("/api/admin/orders/{$order->id}/status", [
+                    'status' => 'cancelled',
+                ])
+                ->assertOk();
+
+            expect($product->fresh()->stock)->toBe(8);
+        });
+
+        it('does not restore stock twice for already cancelled order', function () {
+            $admin = makeAdminForOrders();
+            $product = Product::factory()->create(['stock' => 5]);
+            $order = Order::factory()->create(['status' => OrderStatus::New]);
+            $order->items()->create([
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'product_sku' => $product->sku,
+                'quantity' => 3,
+                'price' => $product->price,
+            ]);
+
+            $this->actingAs($admin)
+                ->patchJson("/api/admin/orders/{$order->id}/status", ['status' => 'cancelled']);
+            $this->actingAs($admin)
+                ->patchJson("/api/admin/orders/{$order->id}/status", ['status' => 'cancelled'])
+                ->assertOk();
+
+            expect($product->fresh()->stock)->toBe(8);
+        });
+
+        it('rejects moving cancelled order back to work', function () {
+            $admin = makeAdminForOrders();
+            $order = Order::factory()->create(['status' => OrderStatus::Cancelled]);
+
+            $this->actingAs($admin)
+                ->patchJson("/api/admin/orders/{$order->id}/status", [
+                    'status' => 'processing',
+                ])
+                ->assertStatus(422);
+
+            expect($order->fresh()->status)->toBe(OrderStatus::Cancelled);
         });
 
         it('validates status enum value', function () {

@@ -34,7 +34,7 @@ class UpdateProductRequest extends FormRequest
             'categories' => ['nullable', 'array'],
             'categories.*' => ['integer', 'exists:categories,id'],
             'existing_image_ids' => ['nullable', 'array'],
-            'existing_image_ids.*' => ['integer'],
+            'existing_image_ids.*' => ['integer', Rule::exists('product_images', 'id')->where('product_id', $productId)],
             'images' => ['nullable', 'array', 'max:10'],
             'images.*' => ['image', 'mimetypes:image/jpeg,image/png,image/webp', 'max:5120'],
         ];

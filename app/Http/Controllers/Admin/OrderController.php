@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\UpdateOrderStatusAction;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateOrderStatusRequest;
@@ -13,6 +14,10 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    public function __construct(
+        private readonly UpdateOrderStatusAction $updateOrderStatusAction,
+    ) {}
+
     public function index(Request $request): JsonResponse
     {
         $query = Order::with('items')->latest();
@@ -61,20 +66,17 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
         $data = $request->validated();
 
-        $oldStatus = $order->status;
-        $newStatus = OrderStatus::from($data['status']);
-
-        $order->update([
-            'status' => $newStatus,
-            'tracking_number' => $data['tracking_number'] ?? $order->tracking_number,
-        ]);
-
-        $order->statusHistory()->create([
-            'old_status' => $oldStatus,
-            'new_status' => $newStatus,
-            'comment' => $data['comment'] ?? null,
-            'author_name' => $request->user()?->name,
-        ]);
+        try {
+            $this->updateOrderStatusAction->execute(
+                order: $order,
+                newStatus: OrderStatus::from($data['status']),
+                trackingNumber: $data['tracking_number'] ?? null,
+                comment: $data['comment'] ?? null,
+                authorName: $request->user()?->name,
+            );
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
         $order->load(['items', 'statusHistory']);
 

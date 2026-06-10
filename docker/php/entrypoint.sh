@@ -5,7 +5,7 @@ MAX_RETRIES=30
 RETRY=0
 
 echo "Waiting for PostgreSQL..."
-until php -r "new PDO('pgsql:host=${DB_HOST:-postgres};port=${DB_PORT:-5432};dbname=${DB_DATABASE:-ecoshop}', '${DB_USERNAME:-ecoshop}', '${DB_PASSWORD:-secret}');" 2>/dev/null; do
+until php -r "new PDO('pgsql:host=${DB_HOST:-postgres};port=${DB_PORT:-5432};dbname=${DB_DATABASE:-ecoshop}', '${DB_USERNAME:-ecoshop}', '${DB_PASSWORD:?DB_PASSWORD is required}');" 2>/dev/null; do
     RETRY=$((RETRY + 1))
     if [ "$RETRY" -ge "$MAX_RETRIES" ]; then
         echo "PostgreSQL is not available after ${MAX_RETRIES} attempts. Exiting."

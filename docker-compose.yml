@@ -51,11 +51,11 @@ services:
     container_name: ecoshop-postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_DB: ${DB_DATABASE:-ecoshop}
       POSTGRES_USER: ${DB_USERNAME:-ecoshop}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -71,7 +71,7 @@ services:
     container_name: ecoshop-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -87,9 +87,9 @@ services:
     container_name: ecoshop-meilisearch
     restart: unless-stopped
     ports:
-      - "7700:7700"
+      - "127.0.0.1:7700:7700"
     environment:
-      MEILI_MASTER_KEY: ${MEILISEARCH_KEY:-masterKey}
+      MEILI_MASTER_KEY: ${MEILISEARCH_KEY:?MEILISEARCH_KEY is required}
     volumes:
       - meilisearch_data:/meili_data
     networks:
@@ -100,8 +100,8 @@ services:
     container_name: ecoshop-mailpit
     restart: unless-stopped
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
     networks:
       - ecoshop
 

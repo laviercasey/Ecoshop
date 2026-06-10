@@ -23,9 +23,9 @@ const queryClient = new QueryClient({
 });
 
 queryClient.prefetchQuery({
-  queryKey: ['catalog-all'],
+  queryKey: ['catalog', '', '', 'popular', 1],
   queryFn: async () => {
-    const { data } = await api.get('/catalog/all');
+    const { data } = await api.get('/catalog', { params: { sort: 'popular', page: 1 } });
     return data;
   },
 });

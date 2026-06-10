@@ -133,6 +133,10 @@ export default function Page() {
       const { data } = await api.post('/checkout', formData);
       const hydrate = useCartStore.getState().hydrate;
       hydrate({});
+      if (data.payment_url) {
+        window.location.href = data.payment_url;
+        return;
+      }
       navigate(ROUTES.checkoutSuccess(data.order.id));
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 422 && err.response?.data?.errors) {

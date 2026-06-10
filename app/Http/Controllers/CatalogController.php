@@ -97,32 +97,6 @@ class CatalogController extends Controller
         ]);
     }
 
-    public function all(): JsonResponse
-    {
-        $data = Cache::remember('catalog:all', now()->addMinutes(10), function () {
-            $products = Product::published()
-                ->with([
-                    'images' => fn ($q) => $q->orderBy('sort_order')->limit(1),
-                    'categories',
-                    'attributes' => fn ($q) => $q->orderBy('sort_order'),
-                ])
-                ->latest()
-                ->get();
-
-            $categories = Category::active()->roots()->orderBy('sort_order')
-                ->with(['children' => fn ($q) => $q->active()->orderBy('sort_order')])
-                ->get(['id', 'name', 'slug', 'sort_order', 'is_active']);
-
-            return [
-                'products' => ProductListResource::collection($products)->resolve(),
-                'categories' => $categories,
-                'totalCount' => $products->count(),
-            ];
-        });
-
-        return response()->json($data);
-    }
-
     public function show(string $slug): JsonResponse
     {
         $product = Product::published()

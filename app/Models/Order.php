@@ -41,6 +41,8 @@ class Order extends Model
         'customer_phone',
         'customer_note',
         'shipping_address',
+        'payment_id',
+        'paid_at',
     ];
 
     protected function casts(): array
@@ -53,6 +55,7 @@ class Order extends Model
             'shipping_cost' => 'decimal:2',
             'total' => 'decimal:2',
             'shipping_address' => 'array',
+            'paid_at' => 'datetime',
         ];
     }
 

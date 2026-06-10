@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SlidersHorizontal } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { api } from '@shared/api';
 import { Breadcrumbs, Drawer, Pagination, Skeleton } from '@shared/ui';
 import { useSeo } from '@shared/hooks';
@@ -10,12 +10,13 @@ import { CatalogSidebar } from './CatalogSidebar';
 import { CatalogProductCard } from './CatalogProductCard';
 import { CatalogTopBar } from './CatalogTopBar';
 
-const PER_PAGE = 12;
-
-interface CatalogAllData {
-  products: Product[];
-  categories: { id: number; name: string; slug: string; sort_order: number; is_active: boolean; children: any[] }[];
-  totalCount: number;
+interface CatalogCategory {
+  id: number;
+  name: string;
+  slug: string;
+  sort_order: number;
+  is_active: boolean;
+  children: CatalogCategory[];
 }
 
 interface PaginationLink {
@@ -24,22 +25,22 @@ interface PaginationLink {
   active: boolean;
 }
 
-function buildLinks(currentPage: number, lastPage: number, searchParams: URLSearchParams): PaginationLink[] {
-  const make = (p: number) => {
-    const params = new URLSearchParams(searchParams);
-    params.set('page', String(p));
-    return `/catalog?${params.toString()}`;
+interface CatalogData {
+  products: {
+    data: Product[];
+    links: PaginationLink[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
   };
-
-  return [
-    { url: currentPage > 1 ? make(currentPage - 1) : null, label: 'Previous', active: false },
-    ...Array.from({ length: lastPage }, (_, i) => ({
-      url: make(i + 1),
-      label: String(i + 1),
-      active: i + 1 === currentPage,
-    })),
-    { url: currentPage < lastPage ? make(currentPage + 1) : null, label: 'Next', active: false },
-  ];
+  categories: CatalogCategory[];
+  currentCategory: string | null;
+  categoryName: string | null;
+  currentSort: string;
+  currentSearch: string;
+  categoryCounts: Record<string, number>;
+  totalCount: number;
 }
 
 export default function Page() {
@@ -51,70 +52,41 @@ export default function Page() {
   const sort     = searchParams.get('sort')     || 'popular';
   const page     = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
 
-  const { data, isPending, isError } = useQuery<CatalogAllData>({
-    queryKey: ['catalog-all'],
+  const { data, isPending, isError } = useQuery<CatalogData>({
+    queryKey: ['catalog', category, search, sort, page],
     queryFn: async () => {
-      const { data } = await api.get('/catalog/all');
+      const { data } = await api.get('/catalog', {
+        params: {
+          category: category || undefined,
+          search: search || undefined,
+          sort,
+          page,
+        },
+      });
       return data;
     },
+    placeholderData: keepPreviousData,
   });
 
-  const allProducts  = data?.products   ?? [];
-  const categories   = data?.categories ?? [];
-  const totalCount   = data?.totalCount ?? 0;
-
-  const filteredByCategory = useMemo(() => {
-    if (!category) return allProducts;
-    return allProducts.filter(p => p.category_slugs?.includes(category));
-  }, [allProducts, category]);
-
-  const filteredBySearch = useMemo(() => {
-    if (!search) return filteredByCategory;
-    const q = search.toLowerCase();
-    return filteredByCategory.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.sku?.toLowerCase().includes(q)
-    );
-  }, [filteredByCategory, search]);
-
-  const sorted = useMemo(() => {
-    const arr = [...filteredBySearch];
-    switch (sort) {
-      case 'price_asc':  return arr.sort((a, b) => a.price - b.price);
-      case 'price_desc': return arr.sort((a, b) => b.price - a.price);
-      case 'name':       return arr.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
-      default:           return arr;
-    }
-  }, [filteredBySearch, sort]);
-
-  const totalFiltered  = sorted.length;
-  const lastPage       = Math.max(1, Math.ceil(totalFiltered / PER_PAGE));
-  const currentPage    = Math.min(page, lastPage);
-  const pageProducts   = sorted.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
-  const paginationLinks = buildLinks(currentPage, lastPage, searchParams);
+  const products        = data?.products.data ?? [];
+  const categories      = data?.categories ?? [];
+  const totalCount      = data?.totalCount ?? 0;
+  const categoryCounts  = data?.categoryCounts ?? {};
+  const lastPage        = data?.products.last_page ?? 1;
+  const paginationLinks = data?.products.links ?? [];
 
   useEffect(() => {
-    if (page > lastPage && !isPending) {
+    if (data && page > lastPage) {
       const params = new URLSearchParams(searchParams);
       params.set('page', '1');
       setSearchParams(params, { replace: true });
     }
-  }, [lastPage, isPending]);
+  }, [data, page, lastPage, searchParams, setSearchParams]);
 
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const p of allProducts) {
-      for (const slug of p.category_slugs ?? []) {
-        counts[slug] = (counts[slug] || 0) + 1;
-      }
-    }
-    return counts;
-  }, [allProducts]);
-
-  const activeCategory  = category || null;
-  const categoryName    = categories.find(c => c.slug === activeCategory)?.name ?? null;
-  const pageTitle       = categoryName || 'Все товары';
-  const displayCount    = activeCategory ? (categoryCounts[activeCategory] ?? 0) : totalCount;
+  const activeCategory = category || null;
+  const categoryName   = data?.categoryName ?? null;
+  const pageTitle      = categoryName || 'Все товары';
+  const displayCount   = activeCategory ? (categoryCounts[activeCategory] ?? 0) : totalCount;
 
   const currentSearch = search;
 
@@ -201,10 +173,10 @@ export default function Page() {
                 </div>
               ))}
             </div>
-          ) : pageProducts.length > 0 ? (
+          ) : products.length > 0 ? (
             <>
               <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {pageProducts.map((product) => (
+                {products.map((product) => (
                   <CatalogProductCard key={product.id} product={product} />
                 ))}
               </div>

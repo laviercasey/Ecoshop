@@ -5,6 +5,8 @@ namespace App\Enums;
 enum OrderStatus: string
 {
     case New = 'new';
+    case PendingPayment = 'pending_payment';
+    case Paid = 'paid';
     case Processing = 'processing';
     case Shipped = 'shipped';
     case Delivered = 'delivered';
@@ -14,6 +16,8 @@ enum OrderStatus: string
     {
         return match ($this) {
             self::New => 'Новый',
+            self::PendingPayment => 'Ожидает оплаты',
+            self::Paid => 'Оплачен',
             self::Processing => 'В обработке',
             self::Shipped => 'Отправлен',
             self::Delivered => 'Доставлен',
@@ -25,6 +29,8 @@ enum OrderStatus: string
     {
         return match ($this) {
             self::New => 'info',
+            self::PendingPayment => 'warning',
+            self::Paid => 'success',
             self::Processing => 'warning',
             self::Shipped => 'primary',
             self::Delivered => 'success',

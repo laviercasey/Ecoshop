@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\CreateOrderAction;
+use App\Actions\StartOrderPaymentAction;
 use App\Enums\PaymentMethod;
 use App\Enums\ShippingMethod;
 use App\Events\OrderCreated;
@@ -20,6 +21,7 @@ class CheckoutController extends Controller
 {
     public function __construct(
         private readonly CreateOrderAction $createOrderAction,
+        private readonly StartOrderPaymentAction $startOrderPaymentAction,
     ) {}
 
     public function options(Request $request): JsonResponse
@@ -99,10 +101,21 @@ class CheckoutController extends Controller
 
         OrderCreated::dispatch($result['order']);
 
+        $paymentUrl = null;
+        try {
+            $paymentUrl = $this->startOrderPaymentAction->execute(
+                order: $result['order'],
+                returnUrl: url('/checkout/success/'.$result['order']->id),
+            );
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         return response()->json([
             'message' => 'Заказ оформлен',
             'order' => new OrderResource($result['order']),
             'skipped_items' => $result['skippedItems'],
+            'payment_url' => $paymentUrl,
         ], 201);
     }
 

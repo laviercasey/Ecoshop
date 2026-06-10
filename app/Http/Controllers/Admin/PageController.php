@@ -7,6 +7,8 @@ use App\Http\Requests\Admin\StorePageRequest;
 use App\Http\Requests\Admin\UpdatePageRequest;
 use App\Http\Resources\PageResource;
 use App\Models\Page;
+use HTMLPurifier;
+use HTMLPurifier_Config;
 use Illuminate\Http\JsonResponse;
 
 class PageController extends Controller
@@ -72,29 +74,18 @@ class PageController extends Controller
 
     private function sanitizeHtml(string $html): string
     {
-        $allowedTags = ['p', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'ul', 'ol', 'li', 'h2', 'h3', 'h4', 'blockquote', 'section', 'a'];
+        $config = HTMLPurifier_Config::createDefault();
+        $config->set('Cache.DefinitionImpl', null);
+        $config->set('HTML.DefinitionID', 'ecoshop-pages');
+        $config->set('HTML.AllowedElements', ['p', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'ul', 'ol', 'li', 'h2', 'h3', 'h4', 'blockquote', 'section', 'a']);
+        $config->set('HTML.AllowedAttributes', ['a.href', '*.class']);
+        $config->set('URI.AllowedSchemes', ['http' => true, 'https' => true]);
 
-        $html = strip_tags($html, '<'.implode('><', $allowedTags).'>');
+        $definition = $config->maybeGetRawHTMLDefinition();
+        if ($definition !== null) {
+            $definition->addElement('section', 'Block', 'Flow', 'Common');
+        }
 
-        return (string) preg_replace_callback(
-            '/<(\w+)(\s[^>]*)?>/',
-            function ($matches) {
-                $tag = $matches[1];
-                $attrs = $matches[2] ?? '';
-
-                $safe = '';
-                if (preg_match('/\bclass\s*=\s*"([^"]*)"/', $attrs, $m)) {
-                    $safe .= ' class="'.htmlspecialchars($m[1], ENT_QUOTES).'"';
-                }
-                if ($tag === 'a' && preg_match('/\bhref\s*=\s*"([^"]*)"/', $attrs, $m)) {
-                    if (preg_match('#^(https?://|/)#', $m[1])) {
-                        $safe .= ' href="'.htmlspecialchars($m[1], ENT_QUOTES).'"';
-                    }
-                }
-
-                return "<{$tag}{$safe}>";
-            },
-            $html,
-        );
+        return (new HTMLPurifier($config))->purify($html);
     }
 }

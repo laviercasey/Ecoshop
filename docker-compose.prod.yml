@@ -6,6 +6,8 @@ services:
     env_file: .env
     expose:
       - "9000"
+    volumes:
+      - storage_data:/var/www/html/storage/app
     depends_on:
       postgres:
         condition: service_healthy
@@ -26,6 +28,8 @@ services:
     restart: unless-stopped
     command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
     env_file: .env
+    volumes:
+      - storage_data:/var/www/html/storage/app
     depends_on:
       postgres:
         condition: service_healthy
@@ -98,6 +102,7 @@ volumes:
   postgres_data:
   redis_data:
   meilisearch_data:
+  storage_data:
 
 networks:
   ecoshop-internal:

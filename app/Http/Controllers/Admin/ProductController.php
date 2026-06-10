@@ -12,7 +12,9 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class ProductController extends Controller
 {
@@ -54,21 +56,33 @@ class ProductController extends Controller
     {
         $data = $request->validated();
 
-        $product = Product::create(collect($data)->except(['categories', 'images'])->toArray());
-
-        if (! empty($data['categories'])) {
-            $product->categories()->sync($data['categories']);
-        }
-
         /** @var UploadedFile[] $uploadedImages */
         $uploadedImages = $request->file('images') ?? [];
-        foreach ($uploadedImages as $index => $image) {
-            $path = $image->store('products');
-            ProductImage::create([
-                'product_id' => $product->id,
-                'path' => $path,
-                'sort_order' => $index,
-            ]);
+        $storedPaths = [];
+
+        try {
+            $product = DB::transaction(function () use ($data, $uploadedImages, &$storedPaths) {
+                $product = Product::create(collect($data)->except(['categories', 'images'])->toArray());
+
+                if (! empty($data['categories'])) {
+                    $product->categories()->sync($data['categories']);
+                }
+
+                foreach ($uploadedImages as $index => $image) {
+                    $path = $image->store('products');
+                    $storedPaths[] = $path;
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'path' => $path,
+                        'sort_order' => $index,
+                    ]);
+                }
+
+                return $product;
+            });
+        } catch (Throwable $e) {
+            Storage::delete($storedPaths);
+            throw $e;
         }
 
         $product->load(['images', 'categories', 'attributes']);
@@ -93,42 +107,60 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
         $data = $request->validated();
 
-        $product->update(collect($data)->except(['categories', 'images', 'existing_image_ids'])->toArray());
-
-        if (array_key_exists('categories', $data)) {
-            $product->categories()->sync($data['categories'] ?? []);
-        }
-
-        if (array_key_exists('existing_image_ids', $data)) {
-            $keepIds = $data['existing_image_ids'] ?? [];
-            /** @var Collection<int, ProductImage> $imagesToDelete */
-            $imagesToDelete = $product->images()->whereNotIn('id', $keepIds)->get();
-            $imagesToDelete->each(function (ProductImage $image) {
-                if ($image->path && preg_match('#^products/[^/]+$#', $image->path)) {
-                    Storage::delete($image->path);
-                }
-                $image->delete();
-            });
-        }
-
         /** @var UploadedFile[] $newImages */
         $newImages = $request->file('images') ?? [];
+        $keepIds = array_key_exists('existing_image_ids', $data) ? ($data['existing_image_ids'] ?? []) : null;
+
         if (! empty($newImages)) {
-            $keepCount = count($data['existing_image_ids'] ?? []);
-            $newCount = count($newImages);
-            if ($keepCount + $newCount > 10) {
+            $keepCount = $keepIds === null
+                ? $product->images()->count()
+                : $product->images()->whereIn('id', $keepIds)->count();
+            if ($keepCount + count($newImages) > 10) {
                 return response()->json(['message' => 'Нельзя хранить более 10 изображений для одного товара.'], 422);
             }
-            $maxSort = $product->images()->max('sort_order') ?? -1;
-            foreach ($newImages as $index => $image) {
-                $path = $image->store('products');
-                ProductImage::create([
-                    'product_id' => $product->id,
-                    'path' => $path,
-                    'sort_order' => $maxSort + $index + 1,
-                ]);
-            }
         }
+
+        $pathsToDelete = [];
+        $storedPaths = [];
+
+        try {
+            DB::transaction(function () use ($product, $data, $newImages, $keepIds, &$pathsToDelete, &$storedPaths) {
+                $product->update(collect($data)->except(['categories', 'images', 'existing_image_ids'])->toArray());
+
+                if (array_key_exists('categories', $data)) {
+                    $product->categories()->sync($data['categories'] ?? []);
+                }
+
+                if ($keepIds !== null) {
+                    /** @var Collection<int, ProductImage> $imagesToDelete */
+                    $imagesToDelete = $product->images()->whereNotIn('id', $keepIds)->get();
+                    $imagesToDelete->each(function (ProductImage $image) use (&$pathsToDelete) {
+                        if ($image->path && preg_match('#^products/[^/]+$#', $image->path)) {
+                            $pathsToDelete[] = $image->path;
+                        }
+                        $image->delete();
+                    });
+                }
+
+                if (! empty($newImages)) {
+                    $maxSort = $product->images()->max('sort_order') ?? -1;
+                    foreach ($newImages as $index => $image) {
+                        $path = $image->store('products');
+                        $storedPaths[] = $path;
+                        ProductImage::create([
+                            'product_id' => $product->id,
+                            'path' => $path,
+                            'sort_order' => $maxSort + $index + 1,
+                        ]);
+                    }
+                }
+            });
+        } catch (Throwable $e) {
+            Storage::delete($storedPaths);
+            throw $e;
+        }
+
+        Storage::delete($pathsToDelete);
 
         $product->load(['images', 'categories', 'attributes']);
 

@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/home', HomeController::class);
 Route::get('/catalog', [CatalogController::class, 'index']);
-Route::get('/catalog/all', [CatalogController::class, 'all']);
 Route::get('/catalog/{slug}', [CatalogController::class, 'show']);
 Route::get('/pages/{slug}', [PageController::class, 'show']);
 Route::post('/contacts', [ContactController::class, 'submit'])->middleware('throttle:5,1');
